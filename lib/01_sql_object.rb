@@ -1,10 +1,7 @@
 require_relative 'db_connection'
 require 'active_support/inflector'
-require 'byebug'
-# NB: the attr_accessor we wrote in phase 0 is NOT used in the rest
-# of this project. It was only a warm up.
 
-class SQLObject
+class Datum
 
   def self.columns
     if @columns
@@ -15,8 +12,10 @@ class SQLObject
           *
         FROM
             #{table_name}
+        LIMIT
+          0
       SQL
-      @columns = columns.first.map {|column| column.to_sym}
+      @columns = columns.first.map(&:to_sym)
       end
   end
 
@@ -25,7 +24,6 @@ class SQLObject
       define_method("#{column}=") { |value| attributes[column] = value }
       define_method("#{column}") { attributes[column] }
     end
-
   end
 
   def self.table_name=(table_name)
@@ -33,7 +31,7 @@ class SQLObject
   end
 
   def self.table_name
-    @table_name ||= self.to_s.tableize
+    @table_name ||= self.name.to_s.tableize
   end
 
   def self.all
@@ -47,39 +45,33 @@ class SQLObject
   end
 
   def self.parse_all(results)
-    all = []
-    results.each do |instance|
-      all << self.new(instance)
-    end
-      all
+    results.map { |instance| self.new(instance) }
   end
 
   def self.find(id)
-    parse_all(DBConnection.execute(<<-SQL)).first
+    parse_all(DBConnection.execute(<<-SQL, id)).first
       SELECT
         *
       FROM
         #{table_name}
       WHERE
-        #{table_name}.id = #{id}
+        #{table_name}.id = ?
     SQL
     # self.new(object.first) unless object.empty?
   end
 
   def initialize(params = {})
-    params.each do |k,v|
-      if self.class.columns.include?(k.to_sym)
-        self.send("#{k}=", v)
+    params.each do |name,value|
+      if self.class.columns.include?(name.to_sym)
+        self.send("#{name}=", value)
       else
-        raise "unknown attribute '#{k}'"
+        raise "unknown attribute '#{name}'"
       end
     end
-
   end
 
   def attributes
     @attributes ||= {}
-
   end
 
   def attribute_values
@@ -118,10 +110,6 @@ class SQLObject
   end
 
   def save
-    if self.id
-      update
-    else
-      insert
-    end
+    id.nil? ? insert : update
   end
 end
