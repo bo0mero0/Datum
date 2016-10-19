@@ -1,6 +1,5 @@
-require_relative '02_searchable'
+require_relative 'search'
 require 'active_support/inflector'
-require 'byebug'
 
 class AssocOptions
   attr_accessor(
@@ -102,7 +101,7 @@ module Associatable
      source_options.model_class.parse_all(results).first
    end
   end
-  
+
 end
 
 class Datum
