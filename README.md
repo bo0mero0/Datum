@@ -1,6 +1,6 @@
 # **Datum - Object-relational mapping in Rails**
 
-Datum connects database tables to their perspective classes. The library is provide within a base class and contains methods for writing and fetching of data. Methods allows for data mapping between classes, existing tables for retrieving of data between different table through associations.
+Use Datum to connects database tables to their respective classes. The library is provided within a base class that require zero configuration. The many methods allow for mapping between classes and existing tables through associations. 
 
 ## **Features and Examples**
 
